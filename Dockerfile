@@ -38,6 +38,10 @@ ENV NODE_ENV production
 # Uncomment the following line in case you want to disable telemetry during runtime.
 ENV NEXT_TELEMETRY_DISABLED 1
 
+# Set Supabase environment variables for production runtime
+ENV NEXT_PUBLIC_SUPABASE_URL=https://mbvvsdlixtabnwvikqom.supabase.co
+ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1idnZzZGxpeHRhYm53dmlrcW9tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyMjkxNzAsImV4cCI6MjA4ODgwNTE3MH0.jZnEufOCcvFBRynIT2CFsk8PwLq05txZzZ6e9aSAEHc
+
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
