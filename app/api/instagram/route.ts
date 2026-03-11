@@ -1,10 +1,13 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-// Initialize Supabase client
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
+export const dynamic = 'force-dynamic';
+
+function getSupabaseClient() {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder';
+    return createClient(supabaseUrl, supabaseKey);
+}
 
 interface InstagramPost {
     id: string;
@@ -18,6 +21,7 @@ interface InstagramPost {
 
 export async function GET() {
     try {
+        const supabase = getSupabaseClient();
         // Fetch Instagram posts from Supabase
         const { data: posts, error } = await supabase
             .from('instagram_posts')
