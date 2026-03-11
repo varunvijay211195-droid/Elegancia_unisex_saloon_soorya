@@ -10,8 +10,51 @@
    Skipping validation of types
    Skipping linting
    Collecting page data ...
-   Generating static pages (0/29) ...
-   Generating static pages (7/29) 
-   Generating static pages (14/29) 
-   Generating static pages (21/29) 
- Γ£ô Generating static pages (29/29)
+   Generating static pages (0/28) ...
+   Generating static pages (7/28) 
+   Generating static pages (14/28) 
+   Generating static pages (21/28) 
+ Γ£ô Generating static pages (28/28)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                              Size     First Load JS
+Γöî Γùï /                                    20.4 kB         229 kB
+Γö£ Γùï /_not-found                          876 B          88.2 kB
+Γö£ Γùï /account                             17.8 kB         235 kB
+Γö£ Γùï /admin                               4.4 kB          208 kB
+Γö£ Γùï /admin/bookings                      6.86 kB         216 kB
+Γö£ Γùï /admin/clients                       3.97 kB         155 kB
+Γö£ Γùï /admin/content                       5.69 kB         215 kB
+Γö£ Γùï /admin/dashboard                     3.42 kB         202 kB
+Γö£ Γùï /admin/loyalty                       4.94 kB         133 kB
+Γö£ Γùï /admin/settings                      1.7 kB          110 kB
+Γö£ ╞Æ /api/instagram                       0 B                0 B
+Γö£ ╞Æ /auth/callback                       0 B                0 B
+Γö£ Γùï /book                                11.5 kB         229 kB
+Γö£ Γùï /bookings                            4.4 kB          208 kB
+Γö£ Γùï /clients                             3.97 kB         155 kB
+Γö£ Γùï /contact                             6.56 kB         148 kB
+Γö£ Γùï /content                             4.09 kB         204 kB
+Γö£ Γùï /dashboard                           3.42 kB         202 kB
+Γö£ Γùï /faq                                 5.05 kB         150 kB
+Γö£ Γùï /gallery                             7.06 kB         149 kB
+Γö£ ╞Æ /invite/[code]                       4.61 kB         156 kB
+Γö£ Γùï /login                               5.52 kB         220 kB
+Γö£ Γùï /pay                                 7.57 kB         181 kB
+Γö£ Γùï /pricing                             5.07 kB         150 kB
+Γö£ Γùï /register                            4.63 kB         210 kB
+Γö£ Γùï /services                            7.24 kB         212 kB
+Γö£ ╞Æ /services/[slug]                     4.19 kB         158 kB
+Γöö Γùï /settings                            1.7 kB          110 kB
++ First Load JS shared by all            87.3 kB
+  Γö£ chunks/2117-616a1e262854df81.js      31.7 kB
+  Γö£ chunks/fd9d1056-2d7a8d217105eef5.js  53.6 kB
+  Γöö other shared chunks (total)          1.97 kB
+
+
+╞Æ Middleware                             75 kB
+
+Γùï  (Static)   prerendered as static content
+╞Æ  (Dynamic)  server-rendered on demand
+
