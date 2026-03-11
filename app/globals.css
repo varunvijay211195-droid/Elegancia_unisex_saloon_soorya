@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #0A0A0B;
+  --foreground: #FFFEF9;
+  --primary-gold: #C9A962;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: var(--font-inter), sans-serif;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .glass-morphism {
+    @apply backdrop-blur-md bg-white/5 border border-white/10 shadow-glass;
+  }
+
+  .glass-morphism-dark {
+    @apply backdrop-blur-md bg-black/40 border border-white/5 shadow-glass;
+  }
+}
