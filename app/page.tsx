@@ -6,6 +6,7 @@ import InstagramFeed from "@/components/sections/InstagramFeed";
 import GoogleReviews from "@/components/sections/GoogleReviews";
 import Team from "@/components/sections/Team";
 import FAQ from "@/components/sections/FAQ";
+import StylistsChoice from "@/components/sections/StylistsChoice";
 import CallToAction from "@/components/sections/CallToAction";
 
 export default function Home() {
@@ -13,6 +14,7 @@ export default function Home() {
     <div className="flex flex-col w-full">
       <Hero />
       <Stats />
+      <StylistsChoice />
       <ServiceHighlight />
       <GalleryPreview />
       <InstagramFeed />

@@ -256,43 +256,40 @@ export async function getCustomerReferral(customerId: string) {
 export async function createReferralCode(customerId: string) {
     const supabase = await createClient();
 
-    // Check if customer already has a referral code
-    const { data: existing } = await supabase
-        .from('referrals')
-        .select('referral_code')
-        .eq('referrer_id', customerId)
+    // 1. Ensure customer_points record exists first
+    const { data: pointsRecord, error: pointsError } = await supabase
+        .from('customer_points')
+        .select('id')
+        .eq('customer_id', customerId)
         .single();
 
-    if (existing) {
-        return { success: true, code: existing.referral_code };
+    if (pointsError && pointsError.code === 'PGRST116') { // Record not found
+        console.log('Creating initial customer_points for', customerId);
+        await supabase.from('customer_points').insert({
+            customer_id: customerId,
+            available_points: 0,
+            total_points: 0,
+            tier: 'bronze'
+        });
     }
 
-    // Generate new code using database function
-    const { data: code, error: codeError } = await supabase.rpc('generate_referral_code');
-
-    if (codeError || !code) {
-        console.error('Error generating code:', codeError);
-        // Fallback to simple random code
-        const fallbackCode = 'ELG' + Math.random().toString(36).substring(2, 8).toUpperCase();
-
-        const { error: insertError } = await supabase
-            .from('referrals')
-            .insert({
-                referrer_id: customerId,
-                referral_code: fallbackCode,
-                referrer_reward_points: 100,
-                referee_reward_points: 50,
-                status: 'pending'
-            });
-
-        if (insertError) {
-            return { success: false, error: insertError.message };
+    // 2. Try to generate a code using the RPC
+    let code: string | null = null;
+    try {
+        const { data: rpcCode, error: rpcError } = await supabase.rpc('generate_referral_code');
+        if (!rpcError && rpcCode) {
+            code = rpcCode;
         }
-
-        return { success: true, code: fallbackCode };
+    } catch (e) {
+        console.error('RPC Error:', e);
     }
 
-    // Insert new referral
+    // 3. Fallback to simple random code if RPC failed
+    if (!code) {
+        code = 'ELG' + Math.random().toString(36).substring(2, 8).toUpperCase();
+    }
+
+    // 4. Insert the referral record
     const { error: insertError } = await supabase
         .from('referrals')
         .insert({
@@ -304,7 +301,16 @@ export async function createReferralCode(customerId: string) {
         });
 
     if (insertError) {
-        console.error('Error creating referral:', insertError);
+        console.error('Error creating referral record:', insertError);
+        // Double check if one was created while we were working (race condition)
+        const { data: existing } = await supabase
+            .from('referrals')
+            .select('referral_code')
+            .eq('referrer_id', customerId)
+            .is('referee_id', null)
+            .maybeSingle();
+
+        if (existing) return { success: true, code: existing.referral_code };
         return { success: false, error: insertError.message };
     }
 
@@ -315,12 +321,12 @@ export async function createReferralCode(customerId: string) {
 export async function useReferralCode(code: string, refereeId: string) {
     const supabase = await createClient();
 
-    // Find the referral by code
+    // Find the referral "template" by code
     const { data: referral, error: findError } = await supabase
         .from('referrals')
         .select('*')
         .eq('referral_code', code.toUpperCase())
-        .eq('status', 'pending')
+        .is('referee_id', null) // Look for the original code record
         .single();
 
     if (findError || !referral) {
@@ -332,18 +338,61 @@ export async function useReferralCode(code: string, refereeId: string) {
         return { success: false, error: 'You cannot use your own referral code' };
     }
 
-    // Complete the referral using database function
-    const { error: completeError } = await supabase.rpc('complete_referral', {
-        p_referral_id: referral.id,
-        p_referee_id: refereeId
-    });
+    // Check if referee already was referred
+    const { data: existing } = await supabase
+        .from('referrals')
+        .select('id')
+        .eq('referee_id', refereeId)
+        .single();
+
+    if (existing) {
+        return { success: false, error: 'You have already used a referral code' };
+    }
+
+    // Complete the referral. We insert a NEW row for the conversion
+    const { error: completeError } = await supabase
+        .from('referrals')
+        .insert({
+            referrer_id: referral.referrer_id,
+            referee_id: refereeId,
+            referral_code: code.toUpperCase(),
+            status: 'completed',
+            completed_at: new Date().toISOString(),
+            referrer_reward_points: referral.referrer_reward_points,
+            referee_reward_points: referral.referee_reward_points
+        });
 
     if (completeError) {
         console.error('Error completing referral:', completeError);
         return { success: false, error: completeError.message };
     }
 
+    // Award points
+    await Promise.all([
+        addPointsToCustomer(referral.referrer_id, referral.referrer_reward_points, `Referral bonus - someone used your code`),
+        addPointsToCustomer(refereeId, referral.referee_reward_points, `Welcome bonus from referral`)
+    ]);
+
+    // Check for "Referral Master" milestone (5 referrals)
+    const count = await getReferralCount(referral.referrer_id);
+    if (count >= 5) {
+        const { error: upgradeError } = await supabase
+            .from('customer_points')
+            .update({ tier: 'black' })
+            .eq('customer_id', referral.referrer_id);
+
+        if (!upgradeError) {
+            console.log(`User ${referral.referrer_id} promoted to BLACK TIER`);
+        }
+    }
+
     return { success: true, message: 'Referral applied! You earned bonus points.' };
+}
+
+export async function getReferralCount(userId: string) {
+    const supabase = await createClient();
+    const { data, error } = await supabase.rpc('get_referral_count', { p_user_id: userId });
+    return data || 0;
 }
 
 // Get all referrals (admin)
@@ -502,4 +551,75 @@ export async function getLoyaltyStats() {
         totalReferrals,
         topEarners: topEarners || []
     };
+}
+
+/**
+ * Birthday Ritual Reward Functions
+ */
+
+export async function getBirthdayOffer(userId: string) {
+    const supabase = await createClient();
+    const today = new Date();
+    const month = today.getMonth() + 1; // 1-12
+
+    // 1. Get user's birth month from profile
+    const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('date_of_birth, full_name')
+        .eq('id', userId)
+        .single();
+
+    if (profileError || !profile?.date_of_birth) return null;
+
+    const birthDate = new Date(profile.date_of_birth);
+    const birthMonth = birthDate.getMonth() + 1;
+
+    // Is it their birthday month?
+    if (birthMonth !== month) return null;
+
+    // 2. Check if they already have an offer for THIS year/month
+    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1).toISOString();
+
+    const { data: existing } = await supabase
+        .from('birthday_offers')
+        .select('*')
+        .eq('user_id', userId)
+        .gte('valid_from', startOfMonth)
+        .single();
+
+    if (existing) return existing;
+
+    // 3. Create a new birthday offer if not exists
+    const code = `BDAY${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
+    const validFrom = new Date(today.getFullYear(), today.getMonth(), 1).toISOString();
+    const validUntil = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString(); // Last day of month
+
+    const { data: newOffer, error: insertError } = await supabase
+        .from('birthday_offers')
+        .insert({
+            user_id: userId,
+            offer_code: code,
+            discount_percent: 20, // Default 20%
+            valid_from: validFrom,
+            valid_until: validUntil,
+        })
+        .select()
+        .single();
+
+    if (insertError) {
+        console.error('Error creating birthday offer:', insertError);
+        return null;
+    }
+
+    return newOffer;
+}
+
+export async function updateDateOfBirth(userId: string, dob: string) {
+    const supabase = await createClient();
+    const { error } = await supabase
+        .from('profiles')
+        .update({ date_of_birth: dob })
+        .eq('id', userId);
+
+    return { success: !error, error: error?.message };
 }

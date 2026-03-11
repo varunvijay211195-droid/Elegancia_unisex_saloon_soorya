@@ -30,7 +30,17 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
-import { getCustomerPoints, getPointsTransactions, getCustomerReferral, createReferralCode, getTierBenefits, useReferralCode, redeemPoints } from "@/lib/actions/loyalty";
+import { getCustomerPoints, getPointsTransactions, getCustomerReferral, createReferralCode, getTierBenefits, useReferralCode, redeemPoints, getBirthdayOffer, updateDateOfBirth, getReferralCount } from "@/lib/actions/loyalty";
+import { BirthdayBanner } from "@/components/engagement/BirthdayBanner";
+import { BirthdayPrompt } from "@/components/engagement/BirthdayPrompt";
+import { MilestoneBadges } from "@/components/engagement/MilestoneBadges";
+import { PointsExpiryWarning } from "@/components/engagement/PointsExpiryWarning";
+import { ThankYouNotes } from "@/components/engagement/ThankYouNotes";
+import { ServiceSuggestions } from "@/components/engagement/ServiceSuggestions";
+import { getThankYouNotes } from "@/lib/actions/notes";
+import { getPersonalizedSuggestions, Suggestion } from "@/lib/actions/suggestions";
+import { getLastCompletedRitual } from "@/lib/actions/rituals";
+import VisualInviteStudio from "@/components/engagement/VisualInviteStudio";
 
 interface Booking {
     id: string;
@@ -46,6 +56,7 @@ interface Profile {
     avatar_url: string;
     loyalty_points: number;
     total_spent: number;
+    date_of_birth?: string;
 }
 
 interface Transaction {
@@ -63,6 +74,7 @@ interface LoyaltyData {
     available_points: number;
     lifetime_points: number;
     tier: string;
+    points_expire_at?: string;
 }
 
 interface TierBenefit {
@@ -108,33 +120,78 @@ export default function AccountPage() {
     const [enteredReferralCode, setEnteredReferralCode] = useState('');
     const [referralLoading, setReferralLoading] = useState(false);
     const [codeCopied, setCodeCopied] = useState(false);
+    const [birthdayOffer, setBirthdayOffer] = useState<any>(null);
+    const [notes, setNotes] = useState<any[]>([]);
+    const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+    const [referralCount, setReferralCount] = useState(0);
+    const [lastRitual, setLastRitual] = useState<any>(null);
 
     useEffect(() => {
         const fetchUserData = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-                setUserId(user.id);
-                const { data: profileData } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-                setProfile(profileData);
-                const { data: bookingData } = await supabase.from('bookings').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
-                setBookings(bookingData || []);
-                const [loyaltyResult, tierResult, referralResult, transactionsResult] = await Promise.all([
-                    getCustomerPoints(user.id),
-                    getTierBenefits(),
-                    getCustomerReferral(user.id),
-                    getPointsTransactions(user.id, 10)
-                ]);
-                if (loyaltyResult) setLoyaltyData(loyaltyResult);
-                if (tierResult) setTierBenefits(tierResult);
-                if (referralResult) {
-                    setReferralCode(referralResult.referral_code);
-                } else {
-                    const codeResult = await createReferralCode(user.id);
-                    if (codeResult.success && codeResult.code) setReferralCode(codeResult.code);
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (user) {
+                    setUserId(user.id);
+                    const { data: profileData } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+                    setProfile(profileData);
+                    const { data: bookingData } = await supabase.from('bookings').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
+                    setBookings(bookingData || []);
+
+                    // Fetch all secondary data in parallel
+                    console.time('AccountDataFetch');
+                    const results = await Promise.allSettled([
+                        getCustomerPoints(user.id),
+                        getTierBenefits(),
+                        getCustomerReferral(user.id),
+                        getPointsTransactions(user.id, 10),
+                        getBirthdayOffer(user.id),
+                        getThankYouNotes(user.id),
+                        getPersonalizedSuggestions(user.id),
+                        getReferralCount(user.id),
+                        getLastCompletedRitual(user.id)
+                    ]);
+                    console.timeEnd('AccountDataFetch');
+
+                    // Extract results with fallbacks
+                    const [
+                        loyaltyResult,
+                        tierResult,
+                        referralResult,
+                        transactionsResult,
+                        birthdayResult,
+                        notesResult,
+                        suggestionsResult,
+                        countResult,
+                        lastRitualResult
+                    ] = results.map(r => r.status === 'fulfilled' ? r.value : null);
+
+                    if (loyaltyResult) setLoyaltyData(loyaltyResult);
+                    if (tierResult) setTierBenefits(tierResult);
+
+                    if (referralResult) {
+                        setReferralCode(referralResult.referral_code);
+                    } else {
+                        try {
+                            const codeResult = await createReferralCode(user.id);
+                            if (codeResult.success && codeResult.code) setReferralCode(codeResult.code);
+                        } catch (e) {
+                            console.error('Error creating referral code:', e);
+                        }
+                    }
+
+                    if (transactionsResult) setTransactions(transactionsResult);
+                    if (birthdayResult) setBirthdayOffer(birthdayResult);
+                    if (notesResult) setNotes(notesResult);
+                    if (suggestionsResult) setSuggestions(suggestionsResult);
+                    if (countResult !== null && countResult !== undefined) setReferralCount(countResult);
+                    if (lastRitualResult) setLastRitual(lastRitualResult);
                 }
-                if (transactionsResult) setTransactions(transactionsResult);
+            } catch (err) {
+                console.error('Fatal error in fetchUserData:', err);
+                toast.error("Some data failed to load. Please refresh.");
+            } finally {
+                setIsLoading(false);
             }
-            setIsLoading(false);
         };
         fetchUserData();
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -323,12 +380,33 @@ export default function AccountPage() {
                     </div>
                 </motion.div>
 
+                {/* Birthday Offer Banner */}
+                {birthdayOffer && !birthdayOffer.is_used && (
+                    <BirthdayBanner offer={birthdayOffer} name={profile?.full_name || ''} />
+                )}
+
+                {/* Birthday Prompt (if DOB missing) */}
+                {profile && !profile.date_of_birth && !birthdayOffer && (
+                    <BirthdayPrompt
+                        userId={userId}
+                        onUpdate={() => window.location.reload()}
+                    />
+                )}
+
+                {/* Points Expiry Warning */}
+                {loyaltyData?.points_expire_at && (
+                    <PointsExpiryWarning
+                        expiryDate={loyaltyData.points_expire_at}
+                        points={loyaltyData.available_points}
+                    />
+                )}
+
                 {/* ─── Quick Stats Row ─── */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.45 }}
-                    className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10"
+                    className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6"
                 >
                     {[
                         { label: 'Bookings', value: bookings.length, icon: <Scissors className="w-5 h-5" />, color: '#D4AF37' },
@@ -354,11 +432,23 @@ export default function AccountPage() {
                     ))}
                 </motion.div>
 
+                {/* Achievement Milestones */}
+                <MilestoneBadges
+                    totalVisits={bookings.filter(b => b.status === 'completed').length}
+                    referralCount={referralCount}
+                />
+
                 {/* ─── Main Grid ─── */}
                 <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
 
-                    {/* Left: Bookings */}
-                    <div className="xl:col-span-8 space-y-6">
+                    {/* Left: Bookings & Notes */}
+                    <div className="xl:col-span-8 space-y-8">
+
+                        {/* Thank You Notes */}
+                        <ThankYouNotes notes={notes} />
+
+                        {/* Personalized Suggestions */}
+                        <ServiceSuggestions suggestions={suggestions} />
 
                         {/* Upcoming Rituals */}
                         <motion.div
@@ -739,6 +829,30 @@ export default function AccountPage() {
                                 </div>
                             </motion.div>
                         )}
+
+                        {/* Visual Invite Studio / Creator Kit */}
+                        <motion.div
+                            initial={{ x: 30, opacity: 0 }}
+                            animate={{ x: 0, opacity: 1 }}
+                            transition={{ duration: 0.6, delay: 0.9 }}
+                            className="relative rounded-[2.5rem] border border-white/[0.08] bg-white/[0.02] backdrop-blur-2xl overflow-hidden p-8"
+                        >
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-primary-gold/10 blur-[60px] rounded-full" />
+                            <div className="mb-8">
+                                <h3 className="font-fraunces text-2xl font-bold flex items-center gap-3">
+                                    <Camera className="w-6 h-6 text-primary-gold" />
+                                    The Creator Kit
+                                </h3>
+                                <p className="text-white/40 text-[10px] uppercase font-bold tracking-[0.2em] mt-1">
+                                    Authentic Invitations • Smart Referral Assets
+                                </p>
+                            </div>
+
+                            <VisualInviteStudio
+                                referralCode={referralCode}
+                                lastRitual={lastRitual}
+                            />
+                        </motion.div>
                     </div>
                 </div>
             </div>

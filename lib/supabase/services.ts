@@ -14,6 +14,7 @@ export interface DBService {
     duration: string;
     tag?: string;
     is_active: boolean;
+    is_stylists_choice: boolean;
     created_at: string;
 }
 

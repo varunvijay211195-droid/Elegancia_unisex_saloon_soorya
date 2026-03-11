@@ -13,26 +13,40 @@ export async function createBooking(formData: {
     phone: string;
     email?: string;
     notes?: string;
+    referralCode?: string;
 }) {
     const supabase = await createClient();
 
     // Get current user if logged in
     const { data: { user } } = await supabase.auth.getUser();
 
-    // Insert booking into Supabase
+    // 1. Get service price for total_price calculation
+    const { data: service } = await supabase
+        .from('services')
+        .select('starting_price')
+        .eq('slug', formData.serviceId)
+        .single();
+
+    const basePrice = service?.starting_price || 0;
+    const discount = formData.referralCode ? 500 : 0;
+    const totalPrice = Math.max(0, basePrice - discount);
+
+    // 2. Insert booking into Supabase
     const { data, error } = await supabase
         .from('bookings')
         .insert({
             service_id: formData.serviceId,
             service_name: formData.serviceName,
-            date: formData.date,         // actual DB column name
-            time: formData.time,          // actual DB column name
+            date: formData.date,
+            time: formData.time,
             customer_name: formData.name,
             customer_phone: formData.phone,
             customer_email: formData.email || null,
             notes: formData.notes || null,
-            user_id: user?.id || null,    // Associate with logged in user
-            status: 'pending'             // Explicitly set initial status
+            user_id: user?.id || null,
+            referral_code: formData.referralCode || null,
+            total_price: totalPrice,
+            status: 'pending'
         })
         .select()
         .single();
@@ -40,6 +54,13 @@ export async function createBooking(formData: {
     if (error) {
         console.error('Booking error:', error);
         return { success: false, error: error.message };
+    }
+
+    // Handle Referral Conversion
+    if (formData.referralCode && user?.id) {
+        // We import it dynamically here or at the top
+        const { useReferralCode } = await import('./loyalty');
+        await useReferralCode(formData.referralCode, user.id);
     }
 
     // 1. Notify Admins in real-time

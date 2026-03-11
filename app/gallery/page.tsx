@@ -7,6 +7,7 @@ import { galleryImages, galleryFilters, GalleryImage } from "@/lib/data/gallery"
 import { cn } from "@/lib/utils";
 import { fadeInUp, viewportOptions } from "@/lib/animations";
 import Lightbox from "@/components/gallery/Lightbox";
+import InstagramFeed from "@/components/sections/InstagramFeed";
 
 export default function GalleryPage() {
     const [filter, setFilter] = useState("all");
@@ -137,6 +138,9 @@ export default function GalleryPage() {
                     />
                 )}
             </AnimatePresence>
+
+            {/* Instagram Feed */}
+            <InstagramFeed />
 
             {/* Booking CTA */}
             <section className="py-24 bg-primary-white">

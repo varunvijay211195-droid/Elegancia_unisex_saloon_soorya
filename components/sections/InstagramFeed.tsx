@@ -1,124 +1,196 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { motion } from "framer-motion";
-import { createClient } from "@/lib/supabase/client";
-import SectionHeader from "@/components/ui/SectionHeader";
-import { fadeInUp, staggerContainer, viewportOptions } from "@/lib/animations";
-import { Instagram, ExternalLink, Play } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Play, ExternalLink } from "lucide-react";
 
-interface InstaPost {
+interface InstagramPost {
     id: string;
-    post_url: string;
-    image_url: string;
     caption: string;
-    type: string;
+    media_url: string;
+    permalink: string;
+    media_type: string;
+    is_reel?: boolean;
+    is_featured?: boolean;
 }
 
 export default function InstagramFeed() {
-    const [posts, setPosts] = useState<InstaPost[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const supabase = createClient();
+    const [posts, setPosts] = useState<InstagramPost[]>([]);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const fetchPosts = async () => {
-            const { data, error } = await supabase
-                .from("instagram_posts")
-                .select("*")
-                .order("created_at", { ascending: false })
-                .limit(12);
-
-            if (data) setPosts(data);
-            setIsLoading(false);
-        };
-        fetchPosts();
+        async function fetchInstagramPosts() {
+            try {
+                const response = await fetch('/api/instagram');
+                const data = await response.json();
+                if (data.data && data.data.length > 0) {
+                    setPosts(data.data);
+                }
+            } catch (error) {
+                console.error('Failed to fetch Instagram posts:', error);
+            } finally {
+                setLoading(false);
+            }
+        }
+        fetchInstagramPosts();
     }, []);
 
-    if (isLoading) return null;
+    if (loading) {
+        return (
+            <section className="py-20 bg-primary-charcoal">
+                <div className="max-w-7xl mx-auto px-6 text-center">
+                    <div className="inline-block w-8 h-8 border-4 border-primary-gold border-t-transparent rounded-full animate-spin" />
+                </div>
+            </section>
+        );
+    }
+
+    if (posts.length === 0) return null;
+
+    // Featured = first post with is_featured=true, or just the first post. The rest are smaller.
+    const featuredIndex = posts.findIndex(p => p.is_featured);
+    const featured = featuredIndex !== -1 ? posts[featuredIndex] : posts[0];
+    const smallPosts = posts.filter(p => p.id !== featured.id).slice(0, 5);
 
     return (
-        <section className="py-32 bg-primary-charcoal relative overflow-hidden">
-            {/* Subtle radial glow */}
-            <div className="absolute -top-24 -left-24 w-96 h-96 bg-primary-gold/10 blur-[120px] rounded-full pointer-events-none" />
+        <section className="py-20 bg-primary-charcoal relative overflow-hidden">
+            {/* Subtle gold glow */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-primary-gold/5 blur-[120px] pointer-events-none" />
 
-            <div className="max-w-7xl mx-auto px-6">
-                <div className="flex flex-col md:flex-row items-center justify-between mb-20 gap-8 text-center md:text-left">
-                    <div className="max-w-xl">
-                        <SectionHeader
-                            subtitle="Social Proof"
-                            title="As Seen on Instagram"
-                            align="left"
-                            className="text-white"
-                        />
-                        <p className="text-white/60 text-lg mt-4 font-light italic leading-relaxed">
-                            "Real clients. Real results. Real vibes. Follow us @elegancia_unisex_salon for your daily dose of slay."
+            <div className="max-w-7xl mx-auto px-6 relative z-10">
+
+                {/* ── SOCIAL PROOF HEADER ─────────────────────── */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    className="mb-14 flex flex-col md:flex-row md:items-end justify-between gap-6"
+                >
+                    <div className="space-y-4 max-w-2xl">
+                        <span className="text-primary-gold font-bold tracking-[0.25em] uppercase text-xs block">
+                            Social Proof
+                        </span>
+                        <p className="font-fraunces text-3xl md:text-4xl font-bold text-white leading-snug">
+                            Real clients. Real results.{" "}
+                            <span className="text-primary-gold">Real vibes.</span>
+                        </p>
+                        <p className="text-white/40 text-sm tracking-wide">
+                            Follow us{" "}
+                            <a
+                                href="https://www.instagram.com/elegancia_unisex_salon/"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-primary-gold hover:underline"
+                            >
+                                @elegancia_unisex_salon
+                            </a>{" "}
+                            for your daily dose of slay.
                         </p>
                     </div>
-
                     <a
                         href="https://www.instagram.com/elegancia_unisex_salon/"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="group relative inline-flex items-center gap-4 bg-white/5 hover:bg-primary-gold text-white hover:text-primary-charcoal px-10 py-5 rounded-2xl border border-white/10 transition-all duration-500 overflow-hidden"
+                        className="inline-flex items-center gap-2 px-7 py-3.5 border border-primary-gold text-primary-gold font-bold rounded-full text-sm uppercase tracking-widest hover:bg-primary-gold hover:text-primary-charcoal transition-all duration-300 whitespace-nowrap self-end md:self-auto"
                     >
-                        <Instagram className="w-6 h-6 relative z-10" />
-                        <span className="font-bold tracking-[0.2em] text-xs relative z-10">FOLLOW THE CREW</span>
-                        <div className="absolute inset-0 bg-gradient-to-r from-primary-gold to-primary-gold/80 translate-x-[-100%] group-hover:translate-x-0 transition-transform duration-500 ease-out" />
+                        Follow the Grid →
                     </a>
-                </div>
+                </motion.div>
 
-                <motion.div
-                    initial="initial"
-                    whileInView="animate"
-                    viewport={viewportOptions}
-                    variants={staggerContainer}
-                    className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6"
-                >
-                    {posts.map((post, idx) => (
-                        <motion.div
-                            key={post.id}
-                            variants={fadeInUp}
-                            className={cn(
-                                "group relative aspect-square rounded-[2rem] overflow-hidden border border-white/5 bg-white/5 shadow-2xl",
-                                idx === 1 || idx === 6 ? "md:row-span-2 md:h-full" : ""
-                            )}
+                {/* ── BENTO GRID ──────────────────────────────── */}
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+
+                    {/* Featured post — large, spans 2 cols × 2 rows */}
+                    {featured && (
+                        <motion.a
+                            href={featured.permalink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            initial={{ opacity: 0, scale: 0.97 }}
+                            whileInView={{ opacity: 1, scale: 1 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.5 }}
+                            className="group relative col-span-2 row-span-2 rounded-2xl overflow-hidden shadow-xl border border-white/5 aspect-square"
                         >
                             <Image
-                                src={post.image_url}
-                                alt="Instagram Post"
+                                src={featured.media_url}
+                                alt={featured.caption || "Instagram post"}
                                 fill
-                                className="object-cover transition-transform duration-700 group-hover:scale-110"
+                                className="object-cover group-hover:scale-105 transition-transform duration-700"
+                                sizes="(max-width: 768px) 100vw, 50vw"
+                            />
+                            {featured.is_reel && (
+                                <div className="absolute top-3 right-3 z-20 bg-black/60 backdrop-blur-sm rounded-full p-2">
+                                    <Play className="w-4 h-4 text-white fill-white" />
+                                </div>
+                            )}
+                            {/* Caption overlay — always slightly visible, full on hover */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-6">
+                                <p className="text-white/70 text-xs mb-3 line-clamp-2 group-hover:text-white transition-colors duration-300">
+                                    {featured.caption}
+                                </p>
+                                <span className="inline-flex items-center gap-1.5 text-primary-gold text-[11px] font-bold uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                    <ExternalLink className="w-3 h-3" /> View Post
+                                </span>
+                            </div>
+                        </motion.a>
+                    )}
+
+                    {/* Smaller posts */}
+                    {smallPosts.map((post, index) => (
+                        <motion.a
+                            key={post.id}
+                            href={post.permalink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            initial={{ opacity: 0, y: 16 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: index * 0.07, duration: 0.4 }}
+                            className="group relative rounded-2xl overflow-hidden shadow-md border border-white/5 aspect-square hover:border-primary-gold/30 transition-all duration-300"
+                        >
+                            <Image
+                                src={post.media_url}
+                                alt={post.caption || "Instagram post"}
+                                fill
+                                className="object-cover group-hover:scale-110 transition-transform duration-700"
                                 sizes="(max-width: 768px) 50vw, 25vw"
                             />
-
-                            {/* Type Indicator */}
-                            <div className="absolute top-4 right-4 p-2 rounded-full bg-black/40 backdrop-blur-md border border-white/10 z-10 opacity-60 group-hover:opacity-100 transition-opacity">
-                                {post.type === 'reel' ? (
-                                    <Play className="w-4 h-4 text-white fill-white" />
-                                ) : (
-                                    <Instagram className="w-4 h-4 text-white" />
-                                )}
-                            </div>
-
-                            {/* Hover Overlay */}
-                            <div className="absolute inset-0 bg-gradient-to-t from-primary-charcoal via-primary-charcoal/40 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col justify-end p-6 md:p-8">
-                                <p className="text-white/90 text-sm md:text-base line-clamp-3 font-light leading-relaxed mb-6 translate-y-4 group-hover:translate-y-0 transition-transform duration-500 delay-75">
-                                    {post.caption || "Styling Excellence at Elegancia."}
+                            {post.is_reel && (
+                                <div className="absolute top-2 right-2 z-20 bg-black/60 backdrop-blur-sm rounded-full p-1.5">
+                                    <Play className="w-3 h-3 text-white fill-white" />
+                                </div>
+                            )}
+                            {/* Caption overlay */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-400 flex flex-col justify-end p-4">
+                                <p className="text-white text-[11px] line-clamp-2 mb-2 leading-relaxed">
+                                    {post.caption}
                                 </p>
-
-                                <a
-                                    href={post.post_url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-2 text-primary-gold font-bold text-xs tracking-widest uppercase translate-y-4 group-hover:translate-y-0 transition-transform duration-500 delay-150 hover:text-white"
-                                >
-                                    VIEW POST <ExternalLink className="w-4 h-4" />
-                                </a>
+                                <span className="text-primary-gold text-[10px] font-bold uppercase tracking-widest flex items-center gap-1">
+                                    <ExternalLink className="w-2.5 h-2.5" /> View Post
+                                </span>
                             </div>
-                        </motion.div>
+                        </motion.a>
                     ))}
+                </div>
+
+                {/* Bottom CTA */}
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: 1 }}
+                    viewport={{ once: true }}
+                    className="text-center mt-10"
+                >
+                    <a
+                        href="https://www.instagram.com/elegancia_unisex_salon/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-white/40 text-sm hover:text-primary-gold transition-colors duration-300 tracking-widest uppercase"
+                    >
+                        See all posts on Instagram →
+                    </a>
                 </motion.div>
             </div>
         </section>

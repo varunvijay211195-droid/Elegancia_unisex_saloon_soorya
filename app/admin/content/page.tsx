@@ -14,12 +14,28 @@ import {
     Loader2,
     LayoutDashboard,
     Edit3,
-    ArrowRight
+    ArrowRight,
+    Zap,
+    Instagram,
+    Play
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { createClient } from "@/lib/supabase/client";
 import Image from "next/image";
 import { uploadGalleryPhoto, deleteGalleryPhoto, updateService } from "@/lib/actions/content";
+import { addInstagramPost, deleteInstagramPost, updateInstagramPost, toggleInstagramFeatured } from "@/lib/actions/instagram";
+import { setStylistsChoice } from "@/lib/actions/services";
+import { toast } from "sonner";
+
+interface InstagramPost {
+    id: string;
+    caption: string;
+    image_url: string;
+    post_url: string;
+    type: string;
+    is_featured: boolean;
+    created_at: string;
+}
 
 interface GalleryItem {
     id: string;
@@ -36,13 +52,15 @@ interface Service {
     category: string;
     starting_price: number;
     is_active: boolean;
+    is_stylists_choice: boolean;
 }
 
 export default function ContentManagementPage() {
     const supabase = createClient();
-    const [activeTab, setActiveTab] = useState<'gallery' | 'services' | 'home'>('gallery');
+    const [activeTab, setActiveTab] = useState<'gallery' | 'services' | 'home' | 'instagram'>('gallery');
     const [gallery, setGallery] = useState<GalleryItem[]>([]);
     const [services, setServices] = useState<Service[]>([]);
+    const [instagramPosts, setInstagramPosts] = useState<InstagramPost[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isUploading, setIsUploading] = useState(false);
     const [uploadPreview, setUploadPreview] = useState<string | null>(null);
@@ -53,6 +71,7 @@ export default function ContentManagementPage() {
 
     const fetchData = async () => {
         setIsLoading(true);
+
         if (activeTab === 'gallery' || activeTab === 'home') {
             const query = supabase.from('gallery').select('*');
             if (activeTab === 'home') {
@@ -60,10 +79,14 @@ export default function ContentManagementPage() {
             }
             const { data } = await query.order('created_at', { ascending: false });
             setGallery(data || []);
-        } else {
+        } else if (activeTab === 'instagram') {
+            const { data } = await supabase.from('instagram_posts').select('*').order('created_at', { ascending: false });
+            setInstagramPosts(data || []);
+        } else if (activeTab === 'services') {
             const { data } = await supabase.from('services').select('*').order('category', { ascending: true });
             setServices(data || []);
         }
+
         setIsLoading(false);
     };
 
@@ -103,6 +126,16 @@ export default function ContentManagementPage() {
         if (result.success) fetchData();
     };
 
+    const handleSetStylistsChoice = async (id: string) => {
+        const result = await setStylistsChoice(id);
+        if (result.success) {
+            toast.success("✨ Stylist's Choice updated!");
+            fetchData();
+        } else {
+            toast.error(result.error || "Failed to update Stylist's Choice");
+        }
+    };
+
     return (
         <div className="space-y-8">
             <header className="flex flex-col md:flex-row justify-between md:items-center gap-6">
@@ -129,6 +162,12 @@ export default function ContentManagementPage() {
                         className={`px-6 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${activeTab === 'services' ? 'bg-primary-gold text-primary-charcoal shadow-lg' : 'text-white/40 hover:text-white'}`}
                     >
                         Retail Rituals
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('instagram')}
+                        className={`px-6 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${activeTab === 'instagram' ? 'bg-primary-gold text-primary-charcoal shadow-lg' : 'text-white/40 hover:text-white'}`}
+                    >
+                        Social Media Manager
                     </button>
                 </div>
             </header>
@@ -296,13 +335,25 @@ export default function ContentManagementPage() {
                                                 <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-primary-gold/60">{service.category}</span>
                                                 <h4 className="font-fraunces text-2xl font-bold text-white group-hover:text-primary-gold transition-colors">{service.title}</h4>
                                             </div>
-                                            <button
-                                                onClick={() => toggleServiceStatus(service.id, service.is_active)}
-                                                className={`w-14 h-8 rounded-full border transition-all flex items-center px-1 ${service.is_active ? 'bg-primary-gold border-primary-gold justify-end' : 'bg-red-500/10 border-red-500/20 justify-start'
-                                                    }`}
-                                            >
-                                                <div className={`w-6 h-6 rounded-full shadow-lg ${service.is_active ? 'bg-primary-charcoal' : 'bg-red-500'}`} />
-                                            </button>
+                                            <div className="flex flex-col items-end gap-3">
+                                                <button
+                                                    onClick={() => toggleServiceStatus(service.id, service.is_active)}
+                                                    className={`w-14 h-8 rounded-full border transition-all flex items-center px-1 ${service.is_active ? 'bg-primary-gold border-primary-gold justify-end' : 'bg-red-500/10 border-red-500/20 justify-start'
+                                                        }`}
+                                                >
+                                                    <div className={`w-6 h-6 rounded-full shadow-lg ${service.is_active ? 'bg-primary-charcoal' : 'bg-red-500'}`} />
+                                                </button>
+
+                                                <button
+                                                    onClick={() => handleSetStylistsChoice(service.id)}
+                                                    className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-[9px] font-black uppercase tracking-wider transition-all ${service.is_stylists_choice
+                                                        ? 'bg-primary-gold/20 border-primary-gold text-primary-gold shadow-[0_0_15px_rgba(212,175,55,0.2)]'
+                                                        : 'bg-white/5 border-white/10 text-white/40 hover:border-white/20 hover:text-white'}`}
+                                                >
+                                                    <Zap className={`w-3 h-3 ${service.is_stylists_choice ? 'fill-current' : ''}`} />
+                                                    {service.is_stylists_choice ? "Featured Choice" : "Set As Choice"}
+                                                </button>
+                                            </div>
                                         </div>
 
                                         <div className="flex items-end justify-between">
@@ -323,6 +374,133 @@ export default function ContentManagementPage() {
                                     </div>
                                 ))}
                             </div>
+                        </div>
+                    </motion.div>
+                )}
+
+                {activeTab === 'instagram' && (
+                    <motion.div
+                        key="instagram"
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                    >
+                        <div className="bg-white/5 border border-white/10 rounded-[2.5rem] p-10">
+                            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
+                                <div className="space-y-2">
+                                    <h3 className="font-fraunces text-3xl font-bold flex items-center gap-4">
+                                        <Instagram className="w-6 h-6 text-primary-gold" /> Social Media Manager
+                                    </h3>
+                                    <p className="text-white/40 text-sm italic">Sculpt your Social Proof section and manage Instagram highlights.</p>
+                                </div>
+                                <form onSubmit={async (e) => {
+                                    e.preventDefault();
+                                    const form = e.currentTarget;
+                                    const formData = new FormData(form);
+                                    setIsUploading(true);
+                                    try {
+                                        const result = await addInstagramPost(formData);
+                                        if (result.success) {
+                                            form.reset();
+                                            fetchData();
+                                            toast.success('Instagram post added!');
+                                        } else {
+                                            toast.error(result.error || 'Failed to add post');
+                                        }
+                                    } finally {
+                                        setIsUploading(false);
+                                    }
+                                }} className="flex gap-3">
+                                    <input
+                                        type="file"
+                                        name="file"
+                                        accept="image/*"
+                                        required
+                                        className="hidden"
+                                        id="instagram-upload"
+                                        onChange={(e) => {
+                                            const file = e.target.files?.[0];
+                                            if (file) {
+                                                const reader = new FileReader();
+                                                reader.onload = (ev) => setUploadPreview(ev.target?.result as string);
+                                                reader.readAsDataURL(file);
+                                            }
+                                        }}
+                                    />
+                                    <label
+                                        htmlFor="instagram-upload"
+                                        className="bg-white/10 border border-white/10 text-white px-6 py-3 rounded-2xl cursor-pointer hover:bg-white/20 transition-all flex items-center gap-2"
+                                    >
+                                        <Upload className="w-5 h-5" /> Choose Image
+                                    </label>
+                                    <Button type="submit" disabled={isUploading} className="bg-primary-gold text-primary-charcoal rounded-2xl h-auto px-6">
+                                        {isUploading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>POST TO FEED</>}
+                                    </Button>
+                                </form>
+                            </div>
+
+                            {/* Upload Preview */}
+                            {uploadPreview && (
+                                <div className="mb-8 p-6 bg-white/5 rounded-3xl border border-white/10">
+                                    <p className="text-white/60 text-sm mb-4">Preview:</p>
+                                    <div className="relative w-32 h-32 rounded-2xl overflow-hidden">
+                                        <Image src={uploadPreview} alt="Preview" fill className="object-cover" />
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-6">
+                                {instagramPosts.map((post) => (
+                                    <div key={post.id} className="group relative aspect-square bg-white/5 rounded-2xl overflow-hidden border border-white/5 hover:border-primary-gold/30 transition-all">
+                                        <Image
+                                            src={post.image_url}
+                                            alt={post.caption || 'Instagram post'}
+                                            fill
+                                            className="object-cover"
+                                        />
+                                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all flex flex-col items-center justify-center p-4">
+                                            <p className="text-white text-xs text-center line-clamp-3 mb-4">{post.caption}</p>
+                                            <div className="flex gap-2">
+                                                <button
+                                                    onClick={async () => {
+                                                        const result = await toggleInstagramFeatured(post.id, post.is_featured);
+                                                        if (result.success) fetchData();
+                                                    }}
+                                                    className={`px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase ${post.is_featured ? 'bg-primary-gold/20 text-primary-gold' : 'bg-white/10 text-white/60'}`}
+                                                >
+                                                    {post.is_featured ? 'Featured' : 'Feature'}
+                                                </button>
+                                                <button
+                                                    onClick={async () => {
+                                                        if (confirm('Delete this post?')) {
+                                                            const result = await deleteInstagramPost(post.id, post.image_url);
+                                                            if (result.success) {
+                                                                fetchData();
+                                                                toast.success('Post deleted');
+                                                            }
+                                                        }
+                                                    }}
+                                                    className="p-2 bg-red-500/20 rounded-xl text-red-400 hover:bg-red-500/40"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                        {post.type === 'reel' && (
+                                            <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-sm rounded-full p-1.5">
+                                                <Play className="w-3 h-3 text-white fill-white" />
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+
+                            {instagramPosts.length === 0 && !isLoading && (
+                                <div className="text-center py-16">
+                                    <Instagram className="w-16 h-16 text-white/20 mx-auto mb-4" />
+                                    <p className="text-white/40">No Instagram posts yet. Upload your first post above!</p>
+                                </div>
+                            )}
                         </div>
                     </motion.div>
                 )}

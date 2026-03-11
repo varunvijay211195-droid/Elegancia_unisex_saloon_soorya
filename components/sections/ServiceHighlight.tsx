@@ -51,9 +51,18 @@ function SpotlightCard({ service }: { service: typeof services[0] }) {
                         className="object-cover group-hover:scale-110 grayscale transition-transform duration-1000 group-hover:grayscale-0"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-primary-charcoal-premium via-primary-charcoal-premium/40 to-transparent p-8 flex flex-col justify-end">
-                        <span className="text-primary-gold text-[10px] font-bold uppercase tracking-[0.2em] mb-2">
-                            {service.tag || "Ritual"}
-                        </span>
+                        {service.isStylistsChoice ? (
+                            <div className="flex items-center gap-2 mb-2">
+                                <Zap className="w-3 h-3 text-primary-gold animate-pulse" />
+                                <span className="text-primary-gold text-[10px] font-black uppercase tracking-[0.3em] shimmer-text">
+                                    Stylist&apos;s Choice
+                                </span>
+                            </div>
+                        ) : (
+                            <span className="text-primary-gold text-[10px] font-bold uppercase tracking-[0.2em] mb-2">
+                                {service.tag || "Ritual"}
+                            </span>
+                        )}
                         <h3 className="font-fraunces text-3xl font-light text-white group-hover:text-primary-gold transition-colors">
                             {service.title}
                         </h3>

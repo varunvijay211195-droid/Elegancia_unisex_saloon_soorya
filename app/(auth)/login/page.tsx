@@ -1,17 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { Mail, Lock, Eye, EyeOff, Loader2, ArrowRight, AlertCircle } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, Loader2, ArrowRight, AlertCircle, Facebook } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { createClient } from "@/lib/supabase/client";
+import { toast } from "sonner";
 
 export default function LoginPage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const authError = searchParams.get('error');
+
+    useEffect(() => {
+        if (authError === 'auth_failed') {
+            toast.error("Authentication failed. Please check your credentials or provider settings.");
+        }
+    }, [authError]);
+
     const supabase = createClient();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -42,6 +52,20 @@ export default function LoginPage() {
         setError(null);
         const { error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
+            options: {
+                redirectTo: `${window.location.origin}/auth/callback`,
+            },
+        });
+
+        if (error) {
+            setError(error.message);
+        }
+    };
+
+    const handleFacebookLogin = async () => {
+        setError(null);
+        const { error } = await supabase.auth.signInWithOAuth({
+            provider: 'facebook',
             options: {
                 redirectTo: `${window.location.origin}/auth/callback`,
             },
@@ -173,12 +197,20 @@ export default function LoginPage() {
                         <button
                             onClick={handleGoogleLogin}
                             type="button"
-                            className="w-full h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center gap-3 hover:bg-white/10 transition-all hover:scale-[1.02] active:scale-[0.98] text-sm font-medium"
+                            className="flex-1 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center gap-3 hover:bg-white/10 transition-all hover:scale-[1.02] active:scale-[0.98] text-sm font-medium"
                         >
-                            <svg className="w-5 h-5" viewBox="0 0 24 24">
+                            <svg className="w-5 h-5 shadow-sm" viewBox="0 0 24 24">
                                 <path fill="white" d="M12.48 10.92v3.28h7.84c-.24 1.84-.908 3.152-1.928 4.176-1.028 1.024-2.604 2.144-4.592 2.144-6.944 0-12.6-5.32-12.6-11.9s5.656-11.9 12.6-11.9c3.816 0 6.548 1.416 8.528 3.208l2.268-2.268C21.78 1.944 18.06 0 13.32 0 6.07 0 0 5.61 0 12.5s6.07 12.5 13.32 12.5c4.11 0 7.224-1.352 9.61-3.824 2.472-2.472 3.256-5.912 3.256-8.68 0-.84-.064-1.632-.192-2.384H12.48z" />
                             </svg>
-                            Google Login
+                            Google
+                        </button>
+                        <button
+                            onClick={handleFacebookLogin}
+                            type="button"
+                            className="flex-1 h-14 rounded-2xl bg-[#1877F2]/10 border border-[#1877F2]/20 flex items-center justify-center gap-3 hover:bg-[#1877F2]/20 transition-all hover:scale-[1.02] active:scale-[0.98] text-sm font-medium text-[#1877F2]"
+                        >
+                            <Facebook className="w-5 h-5 fill-[#1877F2]" />
+                            Facebook
                         </button>
                     </div>
                 </div>

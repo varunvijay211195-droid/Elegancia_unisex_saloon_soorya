@@ -11,7 +11,8 @@ import {
     ChevronLeft,
     Sparkles,
     AlertCircle,
-    Loader2
+    Loader2,
+    Gift
 } from 'lucide-react';
 import { services } from '@/lib/data/services';
 import { team } from '@/lib/data/team';
@@ -21,6 +22,9 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/Button';
 
 import { createBooking } from '@/lib/actions/booking';
+import { ShareBookingCard } from '@/components/engagement/ShareBookingCard';
+import { getCustomerReferral, createReferralCode } from '@/lib/actions/loyalty';
+import { createClient } from '@/lib/supabase/client';
 
 type Step = 'service' | 'stylist' | 'datetime' | 'details' | 'confirm' | 'success';
 
@@ -38,18 +42,40 @@ export default function BookingForm() {
         phone: '',
         notes: '',
     });
+    const [referralCode, setReferralCode] = useState<string>('');
+    const [appliedReferral, setAppliedReferral] = useState<string | null>(null);
+    const [referralGift, setReferralGift] = useState<{ amount: number; message: string } | null>(null);
 
     const searchParams = useSearchParams();
 
     useEffect(() => {
         const serviceSlug = searchParams.get('service');
+        const refParam = searchParams.get('ref');
+
+        // Handle service pre-selection
         if (serviceSlug) {
             const exists = services.some(s => s.slug === serviceSlug);
             if (exists) {
                 setFormData(prev => ({ ...prev, service: serviceSlug }));
-                setStep('stylist'); // Skip to stylist selection if service is pre-selected
+                setStep('stylist');
             }
         }
+
+        // Handle referral detection
+        const checkReferral = () => {
+            const cookieMatch = document.cookie.match(/referral_code=([^;]+)/);
+            const ref = refParam || (cookieMatch ? cookieMatch[1] : null);
+
+            if (ref) {
+                setAppliedReferral(ref);
+                setReferralGift({
+                    amount: 500,
+                    message: "Welcome Gift: ₹500 off applied!"
+                });
+            }
+        };
+
+        checkReferral();
     }, [searchParams]);
 
     const steps: Step[] = ['service', 'stylist', 'datetime', 'details', 'confirm'];
@@ -72,6 +98,7 @@ export default function BookingForm() {
                 phone: formData.phone,
                 email: formData.email,
                 notes: formData.notes,
+                referralCode: appliedReferral || undefined,
             });
 
             if (result.success) {
@@ -83,6 +110,19 @@ export default function BookingForm() {
             setError('An unexpected error occurred. Please try again.');
         } finally {
             setIsSubmitting(false);
+
+            // Try to get/create referral code for sharing
+            const supabase = createClient();
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                const referral = await getCustomerReferral(user.id);
+                if (referral) {
+                    setReferralCode(referral.referral_code);
+                } else {
+                    const newCode = await createReferralCode(user.id);
+                    if (newCode.success) setReferralCode(newCode.code || '');
+                }
+            }
         }
     };
 
@@ -163,6 +203,25 @@ export default function BookingForm() {
                                 </div>
                             </div>
                         )}
+
+                        {/* Referral Gift Indicator */}
+                        {referralGift && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="pt-8 border-t border-white/10"
+                            >
+                                <div className="bg-primary-gold/10 border border-primary-gold/20 rounded-2xl p-4 flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-primary-gold flex items-center justify-center text-primary-charcoal shrink-0">
+                                        <Gift className="w-5 h-5" />
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] font-bold text-primary-gold uppercase tracking-widest">Referral Gift</p>
+                                        <p className="text-xs font-bold text-white mt-0.5">{referralGift.message}</p>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
                     </div>
                 </div>
 
@@ -197,9 +256,53 @@ export default function BookingForm() {
                                                 Thank you for booking with Elegancia Salon. We&apos;ve sent a confirmation email to {formData.email}.
                                             </p>
                                         </div>
-                                        <Button asChild size="lg" className="w-full mt-8">
+
+                                        {/* UPI Payment Option */}
+                                        <div className="bg-primary-gold/10 border border-primary-gold/20 rounded-2xl p-6 mt-4">
+                                            <h4 className="font-bold text-primary-charcoal mb-2">Pay Now with UPI</h4>
+                                            <p className="text-sm text-secondary-label mb-4">
+                                                Secure your booking with instant UPI payment
+                                            </p>
+
+                                            {(() => {
+                                                const selectedService = services.find(s => s.slug === formData.service);
+                                                const amount = selectedService?.startingPrice || 500;
+                                                const ref = 'ELE-' + Date.now().toString().slice(-6);
+                                                const paymentUrl = `/pay?amount=${amount}&ref=${ref}&name=${encodeURIComponent(formData.name)}&service=${encodeURIComponent(selectedService?.title || 'Service')}`;
+
+                                                return (
+                                                    <div className="space-y-3">
+                                                        <p className="font-bold text-2xl text-primary-charcoal">₹{amount}</p>
+                                                        <div className="flex gap-3">
+                                                            <Button asChild className="flex-1 bg-primary-gold hover:bg-primary-gold/90">
+                                                                <Link href={paymentUrl}>
+                                                                    Pay Now
+                                                                </Link>
+                                                            </Button>
+                                                            <Button asChild variant="outline" className="flex-1">
+                                                                <Link href="/">
+                                                                    Skip
+                                                                </Link>
+                                                            </Button>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })()}
+                                        </div>
+
+                                        <Button asChild size="lg" variant="outline" className="w-full mt-4 border-secondary-pearl">
                                             <Link href="/">Back to Home</Link>
                                         </Button>
+
+                                        {/* Social Share Card */}
+                                        <ShareBookingCard
+                                            booking={{
+                                                service_name: services.find(s => s.slug === formData.service)?.title || formData.service,
+                                                date: formData.date,
+                                                time: formData.time
+                                            }}
+                                            referralCode={referralCode}
+                                        />
                                     </div>
                                 )}
 
@@ -393,6 +496,22 @@ export default function BookingForm() {
                                             <div className="flex justify-between items-center">
                                                 <span className="text-[10px] font-bold text-secondary-rose uppercase tracking-widest">Time</span>
                                                 <span className="font-bold text-primary-charcoal">{formData.date} at {formData.time}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center text-secondary-label text-sm">
+                                                <span>Base Price</span>
+                                                <span>₹{services.find(s => s.slug === formData.service)?.startingPrice}</span>
+                                            </div>
+                                            {referralGift && (
+                                                <div className="flex justify-between items-center text-emerald-600 text-sm">
+                                                    <span className="flex items-center gap-1.5"><Gift className="w-3.5 h-3.5" /> Welcome Gift Applied</span>
+                                                    <span>- ₹{referralGift.amount}</span>
+                                                </div>
+                                            )}
+                                            <div className="flex justify-between items-center pt-4 border-t border-secondary-pearl/50">
+                                                <span className="text-[10px] font-bold text-secondary-rose uppercase tracking-widest">Total to Pay at Salon</span>
+                                                <span className="text-xl font-bold text-primary-charcoal">
+                                                    ₹{Math.max(0, (services.find(s => s.slug === formData.service)?.startingPrice || 0) - (referralGift?.amount || 0))}
+                                                </span>
                                             </div>
                                         </div>
                                     </div>

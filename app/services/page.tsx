@@ -162,7 +162,25 @@ export default function ServicesPage() {
                                                     </div>
                                                 </div>
 
-                                                {service.tag && (
+                                                {service.is_stylists_choice && (
+                                                    <motion.div
+                                                        animate={{
+                                                            boxShadow: ["0 0 0px rgba(212, 175, 55, 0)", "0 0 20px rgba(212, 175, 55, 0.4)", "0 0 0px rgba(212, 175, 55, 0)"]
+                                                        }}
+                                                        transition={{ duration: 2, repeat: Infinity }}
+                                                        className="absolute top-6 right-6 bg-gradient-to-r from-primary-gold via-[#FFD700] to-primary-gold text-primary-charcoal text-[9px] font-black uppercase tracking-[0.2em] px-4 py-2.5 rounded-xl z-20 shadow-2xl flex items-center gap-2 overflow-hidden"
+                                                    >
+                                                        <motion.div
+                                                            animate={{ x: ["-100%", "200%"] }}
+                                                            transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                                                            className="absolute inset-0 bg-white/30 skew-x-12"
+                                                        />
+                                                        <Zap className="w-3 h-3 animate-pulse" />
+                                                        Stylist&apos;s Choice
+                                                    </motion.div>
+                                                )}
+
+                                                {service.tag && !service.is_stylists_choice && (
                                                     <span className="absolute top-6 right-6 bg-primary-gold text-primary-charcoal text-[9px] font-black uppercase tracking-[0.2em] px-3.5 py-2 rounded-xl z-20 shadow-2xl">
                                                         {service.tag}
                                                     </span>

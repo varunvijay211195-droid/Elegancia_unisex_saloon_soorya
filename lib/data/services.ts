@@ -9,6 +9,7 @@ export interface Service {
     startingPrice: number        // in ₹
     duration: string        // e.g. "45–60 mins"
     tag?: string        // optional badge e.g. "Most Popular"
+    isStylistsChoice?: boolean;
 }
 
 export const services: Service[] = [
@@ -46,6 +47,7 @@ export const services: Service[] = [
         image: 'https://images.unsplash.com/photo-1487412912498-0447578fcca8?w=800&q=80',
         startingPrice: 800,
         duration: '60–120 mins',
+        isStylistsChoice: true,
     },
     {
         slug: 'bridal-styling',

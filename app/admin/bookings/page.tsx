@@ -15,12 +15,21 @@ import {
     Plus,
     ChevronRight,
     Printer,
-    Download
+    Download,
+    Eye,
+    X,
+    Heart,
+    Sparkles,
+    Lightbulb,
+    MessageSquare,
+    Send
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/Button";
 import { completeBooking } from "@/lib/actions/engagement";
+import { sendThankYouNote } from "@/lib/actions/notes";
 import { toast } from "sonner";
+import Image from "next/image";
 
 interface Booking {
     id: string;
@@ -31,14 +40,27 @@ interface Booking {
     date: string;
     time: string;
     status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
+    payment_status: 'pending' | 'paid' | 'failed' | 'refunded';
+    payment_amount: number;
+    payment_method: string;
+    payment_reference: string;
+    payment_screenshot: string;
     created_at: string;
+    user_id?: string;
 }
 
-const statusColors = {
+const statusColors: Record<string, string> = {
     pending: "text-amber-400 bg-amber-400/10 border-amber-400/20",
     confirmed: "text-green-400 bg-green-400/10 border-green-400/20",
     cancelled: "text-red-400 bg-red-400/10 border-red-400/20",
     completed: "text-blue-400 bg-blue-400/10 border-blue-400/20",
+};
+
+const paymentStatusColors: Record<string, string> = {
+    pending: "text-amber-400 bg-amber-400/10",
+    paid: "text-green-400 bg-green-400/10",
+    failed: "text-red-400 bg-red-400/10",
+    refunded: "text-blue-400 bg-blue-400/10",
 };
 
 export default function BookingsPage() {
@@ -47,19 +69,33 @@ export default function BookingsPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [filterStatus, setFilterStatus] = useState<string>("all");
+    const [screenshotModal, setScreenshotModal] = useState<{ show: boolean, url: string, booking: Booking | null }>({ show: false, url: '', booking: null });
+    const [noteModal, setNoteModal] = useState<{
+        show: boolean;
+        booking: Booking | null;
+        type: 'thank_you' | 'hair_care_tip' | 'personal_note';
+        message: string;
+        isSending: boolean;
+    }>({
+        show: false,
+        booking: null,
+        type: 'thank_you',
+        message: '',
+        isSending: false
+    });
+
+    const fetchBookings = async () => {
+        const { data, error } = await supabase
+            .from('bookings')
+            .select('*')
+            .order('date', { ascending: true })
+            .order('time', { ascending: true });
+
+        if (data) setBookings(data);
+        setIsLoading(false);
+    };
 
     useEffect(() => {
-        const fetchBookings = async () => {
-            const { data, error } = await supabase
-                .from('bookings')
-                .select('*')
-                .order('date', { ascending: true })
-                .order('time', { ascending: true });
-
-            if (data) setBookings(data);
-            setIsLoading(false);
-        };
-
         fetchBookings();
 
         // Subscribe to real-time updates
@@ -73,7 +109,7 @@ export default function BookingsPage() {
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [supabase]);
+    }, []);
 
     const updateBookingStatus = async (id: string, status: string) => {
         if (status === 'completed') {
@@ -96,6 +132,26 @@ export default function BookingsPage() {
             toast.error("Failed to update status");
         } else {
             toast.success(`Booking ${status} successfully`);
+        }
+    };
+
+    const handleSendNote = async () => {
+        if (!noteModal.booking || !noteModal.message.trim()) return;
+
+        setNoteModal(prev => ({ ...prev, isSending: true }));
+        const result = await sendThankYouNote(
+            noteModal.booking.user_id || '',
+            noteModal.message,
+            noteModal.booking.id,
+            noteModal.type
+        );
+
+        if (result.success) {
+            toast.success("Note sent to client!");
+            setNoteModal({ show: false, booking: null, type: 'thank_you', message: '', isSending: false });
+        } else {
+            toast.error(result.error || "Failed to send note");
+            setNoteModal(prev => ({ ...prev, isSending: false }));
         }
     };
 
@@ -175,6 +231,7 @@ export default function BookingsPage() {
                                 <th className="px-8 py-6">Ritualist / Service</th>
                                 <th className="px-8 py-6">Date & Time</th>
                                 <th className="px-8 py-6">Status</th>
+                                <th className="px-8 py-6">Payment</th>
                                 <th className="px-8 py-6">Contact</th>
                                 <th className="px-8 py-6 text-right">Actions</th>
                             </tr>
@@ -182,8 +239,8 @@ export default function BookingsPage() {
                         <tbody className="divide-y divide-white/5">
                             <AnimatePresence mode="popLayout">
                                 {isLoading ? (
-                                    <tr>
-                                        <td colSpan={5} className="px-8 py-20 text-center">
+                                    <tr key="loading">
+                                        <td colSpan={6} className="px-8 py-20 text-center">
                                             <div className="flex flex-col items-center gap-4">
                                                 <div className="w-10 h-10 border-2 border-primary-gold border-t-transparent rounded-full animate-spin" />
                                                 <p className="text-white/20 text-sm font-medium animate-pulse">Syncing Rituals...</p>
@@ -191,8 +248,8 @@ export default function BookingsPage() {
                                         </td>
                                     </tr>
                                 ) : filteredBookings.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={5} className="px-8 py-20 text-center">
+                                    <tr key="empty">
+                                        <td colSpan={6} className="px-8 py-20 text-center">
                                             <p className="text-white/20 text-sm font-medium">No rituals found matching your criteria.</p>
                                         </td>
                                     </tr>
@@ -232,6 +289,23 @@ export default function BookingsPage() {
                                                 </span>
                                             </td>
                                             <td className="px-8 py-6">
+                                                <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest ${paymentStatusColors[booking.payment_status || 'pending']}`}>
+                                                    {booking.payment_status === 'paid' ? '💰' : ''} {booking.payment_status || 'pending'}
+                                                </span>
+                                                {booking.payment_amount > 0 && (
+                                                    <span className="ml-2 text-white/60">₹{booking.payment_amount}</span>
+                                                )}
+                                                {booking.payment_screenshot && (
+                                                    <button
+                                                        onClick={() => setScreenshotModal({ show: true, url: booking.payment_screenshot, booking })}
+                                                        className="ml-2 p-1.5 rounded-lg bg-primary-gold/10 border border-primary-gold/20 text-primary-gold hover:bg-primary-gold/20"
+                                                        title="View payment screenshot"
+                                                    >
+                                                        <Eye className="w-4 h-4" />
+                                                    </button>
+                                                )}
+                                            </td>
+                                            <td className="px-8 py-6">
                                                 <div className="flex gap-2">
                                                     <a href={`tel:${booking.customer_phone}`} className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-white/30 hover:text-primary-gold hover:bg-white/10 transition-all">
                                                         <Phone className="w-4 h-4" />
@@ -269,6 +343,13 @@ export default function BookingsPage() {
                                                             <XCircle className="w-5 h-5" />
                                                         </button>
                                                     )}
+                                                    <button
+                                                        onClick={() => setNoteModal({ show: true, booking, type: 'thank_you', message: '', isSending: false })}
+                                                        className="p-3 bg-pink-500/10 border border-pink-500/20 text-pink-400 rounded-2xl hover:bg-pink-500 hover:text-white transition-all shadow-xl shadow-pink-500/10"
+                                                        title="Send Personal Note"
+                                                    >
+                                                        <Heart className="w-5 h-5" />
+                                                    </button>
                                                     <button className="p-3 bg-white/5 border border-white/10 text-white/30 rounded-2xl hover:bg-white/10 hover:text-white transition-all">
                                                         <MoreHorizontal className="w-5 h-5" />
                                                     </button>
@@ -285,6 +366,124 @@ export default function BookingsPage() {
                     </table>
                 </div>
             </div>
+
+            {/* Screenshot Modal */}
+            <AnimatePresence>
+                {screenshotModal.show && (
+                    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setScreenshotModal({ show: false, url: '', booking: null })}>
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="bg-white rounded-3xl p-6 max-w-2xl w-full max-h-[90vh] overflow-hidden"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div className="flex justify-between items-center mb-4 text-primary-charcoal">
+                                <h3 className="font-fraunces text-xl font-bold">Payment Screenshot</h3>
+                                <button onClick={() => setScreenshotModal({ show: false, url: '', booking: null })} className="p-2 hover:bg-gray-100 rounded-xl transition-all">
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+
+                            {screenshotModal.booking && (
+                                <div className="mb-4 p-4 bg-gray-50 rounded-2xl">
+                                    <p className="font-bold text-primary-charcoal">{screenshotModal.booking.customer_name}</p>
+                                    <p className="text-sm text-secondary-label">{screenshotModal.booking.service_name}</p>
+                                </div>
+                            )}
+
+                            <div className="relative h-96 bg-gray-100 rounded-2xl overflow-hidden">
+                                <Image src={screenshotModal.url} alt="Payment screenshot" fill className="object-contain" />
+                            </div>
+
+                            <div className="flex gap-3 mt-6">
+                                <Button
+                                    onClick={() => {
+                                        updateBookingStatus(screenshotModal.booking!.id, 'confirmed');
+                                        setScreenshotModal({ show: false, url: '', booking: null });
+                                    }}
+                                    className="flex-1 bg-green-500 hover:bg-green-600 text-white"
+                                >
+                                    Confirm Payment
+                                </Button>
+                                <Button variant="outline" onClick={() => setScreenshotModal({ show: false, url: '', booking: null })} className="flex-1 border-gray-200">
+                                    Close
+                                </Button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Personal Note Modal */}
+            <AnimatePresence>
+                {noteModal.show && noteModal.booking && (
+                    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            className="bg-[#1A1A1B] border border-white/10 rounded-[2.5rem] p-8 max-w-lg w-full shadow-2xl"
+                        >
+                            <div className="flex justify-between items-center mb-8">
+                                <h3 className="font-fraunces text-2xl font-bold text-white flex items-center gap-3">
+                                    <Heart className="w-6 h-6 text-pink-500" />
+                                    Personal <span className="text-primary-gold">Note</span>
+                                </h3>
+                                <button onClick={() => setNoteModal({ ...noteModal, show: false })} className="text-white/20 hover:text-white transition-all">
+                                    <X className="w-6 h-6" />
+                                </button>
+                            </div>
+
+                            <div className="space-y-6">
+                                <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
+                                    <p className="text-white font-bold text-sm">{noteModal.booking.customer_name}</p>
+                                    <p className="text-white/40 text-xs uppercase tracking-widest mt-0.5">{noteModal.booking.service_name}</p>
+                                </div>
+
+                                <div className="grid grid-cols-3 gap-3">
+                                    {[
+                                        { id: 'thank_you', icon: Sparkles, label: 'Thank You', color: 'text-pink-400' },
+                                        { id: 'hair_care_tip', icon: Lightbulb, label: 'Hair Tip', color: 'text-yellow-400' },
+                                        { id: 'personal_note', icon: MessageSquare, label: 'Note', color: 'text-blue-400' }
+                                    ].map((type) => (
+                                        <button
+                                            key={type.id}
+                                            onClick={() => setNoteModal({ ...noteModal, type: type.id as any })}
+                                            className={`flex flex-col items-center gap-2 p-4 rounded-2xl border transition-all ${noteModal.type === type.id
+                                                    ? 'bg-primary-gold/10 border-primary-gold'
+                                                    : 'bg-white/5 border-white/5 hover:border-white/20'
+                                                }`}
+                                        >
+                                            <type.icon className={`w-5 h-5 ${type.color}`} />
+                                            <span className="text-[10px] font-bold uppercase tracking-wider text-white/60">{type.label}</span>
+                                        </button>
+                                    ))}
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] ml-2">Message</label>
+                                    <textarea
+                                        value={noteModal.message}
+                                        onChange={(e) => setNoteModal({ ...noteModal, message: e.target.value })}
+                                        placeholder="Type your personal message here..."
+                                        className="w-full h-40 bg-white/5 border border-white/10 rounded-2xl p-6 text-white placeholder:text-white/20 focus:outline-none focus:ring-1 focus:ring-primary-gold/50 transition-all resize-none italic"
+                                    />
+                                </div>
+
+                                <Button
+                                    onClick={handleSendNote}
+                                    disabled={!noteModal.message.trim() || noteModal.isSending}
+                                    className="w-full h-14 rounded-2xl bg-primary-gold text-primary-charcoal font-bold gap-2"
+                                >
+                                    {noteModal.isSending ? 'Sending...' : 'Send Ritual Note'}
+                                    <Send className="w-4 h-4" />
+                                </Button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }
