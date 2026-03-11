@@ -22,7 +22,9 @@ import { paymentConfig, generateUPIDeepLinks } from '@/lib/data/payments';
 import { createClient } from '@/lib/supabase/client';
 import { toast } from 'sonner';
 
-export default function PaymentPage() {
+import { Suspense } from 'react';
+
+function PaymentPageContent() {
     const searchParams = useSearchParams();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const supabase = createClient();
@@ -375,5 +377,13 @@ export default function PaymentPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function PaymentPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen bg-[#0A0A0B] text-white py-12 px-4 flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary-gold" /></div>}>
+            <PaymentPageContent />
+        </Suspense>
     );
 }
