@@ -20,10 +20,12 @@ body {
   }
 
   .glass-morphism {
-    @apply backdrop-blur-md bg-white/5 border border-white/10 shadow-glass;
+    @apply backdrop-blur-md bg-white/5 border border-white/10;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
   }
 
   .glass-morphism-dark {
-    @apply backdrop-blur-md bg-black/40 border border-white/5 shadow-glass;
+    @apply backdrop-blur-md bg-black/40 border border-white/5;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
   }
 }

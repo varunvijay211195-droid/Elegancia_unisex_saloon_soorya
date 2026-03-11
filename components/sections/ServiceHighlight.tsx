@@ -30,7 +30,7 @@ function SpotlightCard({ service }: { service: typeof services[0] }) {
             className="group relative"
         >
             <Card className="h-full group overflow-hidden glass-morphism-dark border-white/5 hover:border-primary-gold/30 transition-all duration-500">
-                <div
+                <motion.div
                     className="pointer-events-none absolute -inset-px rounded-xl opacity-0 transition duration-300 group-hover:opacity-100"
                     style={{
                         background: useMotionTemplate`

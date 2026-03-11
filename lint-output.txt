@@ -1,0 +1,51 @@
+﻿node.exe : 
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" 
+"C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: 
+    (:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommand 
+   Error
+ 
+./components/layout/Footer.tsx
+19:35  Error: `'` can be escaped with 
+`&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.  
+react/no-unescaped-entities
+
+./components/sections/Hero.tsx
+41:35  Error: `'` can be escaped with 
+`&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.  
+react/no-unescaped-entities
+97:82  Error: `"` can be escaped with 
+`&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  
+react/no-unescaped-entities
+97:141  Error: `"` can be escaped with 
+`&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  
+react/no-unescaped-entities
+
+./components/sections/ServiceHighlight.tsx
+48:86  Error: `"` can be escaped with 
+`&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  
+react/no-unescaped-entities
+48:106  Error: `"` can be escaped with 
+`&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  
+react/no-unescaped-entities
+
+./components/sections/TestimonialSlider.tsx
+48:33  Error: `"` can be escaped with 
+`&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  
+react/no-unescaped-entities
+48:53  Error: `"` can be escaped with 
+`&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  
+react/no-unescaped-entities
+
+./components/ui/Input.tsx
+4:18  Error: An interface declaring no 
+members is equivalent to its supertype.  
+@typescript-eslint/no-empty-object-type
+
+info  - Need to disable some ESLint rules? 
+Learn more here: https://nextjs.org/docs/bas
+ic-features/eslint#disabling-rules

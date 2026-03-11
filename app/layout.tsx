@@ -5,6 +5,7 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import WhatsAppFAB from "@/components/ui/WhatsAppFAB";
 import FloatingBookingBar from "@/components/ui/FloatingBookingBar";
+import { Toaster } from "sonner";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -17,8 +18,8 @@ const fraunces = Fraunces({
 });
 
 export const metadata: Metadata = {
-  title: "Elegancia Unisex Salon | Slay Every Look in Ernakulam",
-  description: "Elegancia Unisex Salon & Makeover Studio. Premium hair styling, beauty treatments, and bridal artistry in Amballur, Ernakulam.",
+  title: "Elegancia Unisex Salon & Makeover Studio | Slay Every Look",
+  description: "Elegancia Unisex Salon & Makeover Studio. Where Elegance Meets Style. Unisex Salon | Hair • Beauty • Bridal. Located near More Super Market, Kesavanpady, Amballur, Ernakulam 682305.",
 };
 
 export default function RootLayout({
@@ -38,6 +39,7 @@ export default function RootLayout({
         <Footer />
         <WhatsAppFAB />
         <FloatingBookingBar />
+        <Toaster position="top-right" richColors theme="dark" />
       </body>
     </html>
   );

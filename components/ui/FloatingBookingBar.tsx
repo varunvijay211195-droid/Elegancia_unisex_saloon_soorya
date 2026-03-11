@@ -39,16 +39,17 @@ export default function FloatingBookingBar() {
                                 <Sparkles className="w-4 h-4 text-primary-charcoal animate-pulse" />
                             </div>
                             <div className="flex flex-col">
-                                <span className="text-[10px] uppercase tracking-widest text-white/50 font-bold">Elegancia Rituals</span>
-                                <span className="text-sm text-white font-medium whitespace-nowrap">Slay Every Look</span>
+                                <span className="text-[10px] uppercase tracking-widest text-primary-gold/80 font-bold">Elegancia Rituals</span>
+                                <span className="text-sm text-white font-medium whitespace-nowrap drop-shadow-sm">Slay Every Look</span>
                             </div>
                         </div>
 
                         <Link
                             href="/book"
-                            className="bg-gold-gradient px-6 py-3 rounded-full text-sm font-bold text-primary-charcoal hover:scale-105 transition-transform active:scale-95"
+                            className="relative overflow-hidden bg-primary-gold px-8 py-3 rounded-full text-sm font-bold text-primary-charcoal hover:scale-105 transition-transform active:scale-95 shadow-lg shadow-primary-gold/20"
                         >
-                            Book Now
+                            <span className="absolute inset-0 bg-gold-gradient opacity-100" />
+                            <span className="relative z-10">Book Now</span>
                         </Link>
                     </div>
                 </motion.div>

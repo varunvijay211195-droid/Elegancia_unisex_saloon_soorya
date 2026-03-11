@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Scissors, Instagram, Facebook, Phone, Mail, MapPin, Sparkles } from "lucide-react";
+import Image from "next/image";
+import { Instagram, Facebook, Phone, Mail, MapPin, Sparkles } from "lucide-react";
 
 export default function Footer() {
     return (
@@ -13,8 +14,13 @@ export default function Footer() {
                     {/* Column 1: Brand */}
                     <div className="space-y-8">
                         <Link href="/" className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-gold-gradient rounded-full flex items-center justify-center shadow-lg shadow-primary-gold/20">
-                                <Sparkles className="w-5 h-5 text-primary-charcoal" />
+                            <div className="relative w-12 h-12">
+                                <Image
+                                    src="/images/logo.png"
+                                    alt="Elegancia Logo"
+                                    fill
+                                    className="object-contain mix-blend-screen"
+                                />
                             </div>
                             <span className="font-fraunces text-3xl font-light tracking-tighter">Elegancia</span>
                         </Link>
@@ -23,12 +29,39 @@ export default function Footer() {
                             Kerala&apos;s premier unisex salon for hair rituals and bridal makeovers.
                         </p>
                         <div className="flex gap-6">
-                            <a href="https://instagram.com/elegancia_unisex_salon" target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-primary-gold transition-colors">
-                                <Instagram className="w-5 h-5" />
-                            </a>
-                            <a href="#" className="text-white/40 hover:text-primary-gold transition-colors">
-                                <Facebook className="w-5 h-5" />
-                            </a>
+                            {process.env.NEXT_PUBLIC_INSTAGRAM_URL && (
+                                <a
+                                    href={process.env.NEXT_PUBLIC_INSTAGRAM_URL}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-white/40 hover:text-primary-gold transition-colors"
+                                    title="Instagram"
+                                >
+                                    <Instagram className="w-5 h-5" />
+                                </a>
+                            )}
+                            {process.env.NEXT_PUBLIC_FACEBOOK_URL && (
+                                <a
+                                    href={process.env.NEXT_PUBLIC_FACEBOOK_URL}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-white/40 hover:text-primary-gold transition-colors"
+                                    title="Facebook"
+                                >
+                                    <Facebook className="w-5 h-5" />
+                                </a>
+                            )}
+                            {process.env.NEXT_PUBLIC_GOOGLE_REVIEW_URL && (
+                                <a
+                                    href={process.env.NEXT_PUBLIC_GOOGLE_REVIEW_URL}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-white/40 hover:text-primary-gold transition-colors"
+                                    title="Google Reviews"
+                                >
+                                    <Sparkles className="w-5 h-5" />
+                                </a>
+                            )}
                         </div>
                     </div>
 
@@ -59,7 +92,7 @@ export default function Footer() {
                             </li>
                             <li className="flex gap-4">
                                 <Phone className="w-5 h-5 text-primary-gold flex-shrink-0" />
-                                <span>+91 9744 33 00 22</span>
+                                <span>+91 96055 50666</span>
                             </li>
                         </ul>
                     </div>
