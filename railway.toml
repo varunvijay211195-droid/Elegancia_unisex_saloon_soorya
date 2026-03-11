@@ -1,6 +1,10 @@
 [build]
 builder = "dockerfile"
 buildCommand = "npm run build"
+buildArgs = {
+  NEXT_PUBLIC_SUPABASE_URL = "https://mbvvsdlixtabnwvikqom.supabase.co"
+  NEXT_PUBLIC_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1idnZzZGxpeHRhYm53dmlrcW9tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyMjkxNzAsImV4cCI6MjA4ODgwNTE3MH0.jZnEufOCcvFBRynIT2CFsk8PwLq05txZzZ6e9aSAEHc"
+}
 
 [deploy]
 numReplicas = 1
