@@ -1,2 +1,0 @@
--- Data for auth.one_time_tokens
-INSERT INTO "auth"."one_time_tokens" ("id", "user_id", "token_type", "token_hash", "relates_to", "created_at", "updated_at") VALUES ('7cd99dc5-85a5-454d-b915-6274fba6ea7c', '8488e0ad-7a94-4ec5-ab83-e3b5da27c7e6', 'confirmation_token', 'pkce_9c399c08f074e618797f77394c1a25a33843f2d5f159fbd2f50bd44b', 'tempuser@mailinator.com', '2026-03-11 13:47:21.735740', '2026-03-11 13:47:21.735740');
