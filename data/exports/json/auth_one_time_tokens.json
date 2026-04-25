@@ -1,0 +1,11 @@
+[
+  {
+    "id": "7cd99dc5-85a5-454d-b915-6274fba6ea7c",
+    "user_id": "8488e0ad-7a94-4ec5-ab83-e3b5da27c7e6",
+    "token_type": "confirmation_token",
+    "token_hash": "pkce_9c399c08f074e618797f77394c1a25a33843f2d5f159fbd2f50bd44b",
+    "relates_to": "tempuser@mailinator.com",
+    "created_at": "2026-03-11T13:47:21.735740",
+    "updated_at": "2026-03-11T13:47:21.735740"
+  }
+]

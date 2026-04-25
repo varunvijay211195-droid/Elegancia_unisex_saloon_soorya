@@ -1,0 +1,38 @@
+[
+  {
+    "id": "06dce703-8cf2-4f48-90cc-3e94e16dfd5d",
+    "tier_name": "Bronze",
+    "min_points": 0,
+    "max_points": 499,
+    "bonus_percentage": 0,
+    "description": "Welcome tier - 1 point per \u20b91 spent",
+    "created_at": "2026-03-11T16:15:11.214371+00:00"
+  },
+  {
+    "id": "2384da78-3d59-4185-b0a7-6cb5773eaf57",
+    "tier_name": "Silver",
+    "min_points": 500,
+    "max_points": 999,
+    "bonus_percentage": 5,
+    "description": "5% bonus points on all services",
+    "created_at": "2026-03-11T16:15:11.214371+00:00"
+  },
+  {
+    "id": "689d9968-9f81-44bf-9ccc-42c95a58c065",
+    "tier_name": "Gold",
+    "min_points": 1000,
+    "max_points": 2499,
+    "bonus_percentage": 10,
+    "description": "10% bonus points on all services",
+    "created_at": "2026-03-11T16:15:11.214371+00:00"
+  },
+  {
+    "id": "614b88e3-d01f-41fd-9bf0-849033167955",
+    "tier_name": "Platinum",
+    "min_points": 2500,
+    "max_points": null,
+    "bonus_percentage": 15,
+    "description": "15% bonus points + priority booking",
+    "created_at": "2026-03-11T16:15:11.214371+00:00"
+  }
+]

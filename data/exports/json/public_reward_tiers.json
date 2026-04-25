@@ -1,0 +1,31 @@
+[
+  {
+    "id": "053bdabd-1bca-4193-b2aa-53be54729ee9",
+    "name": "Silver",
+    "min_points": 0,
+    "perks": [
+      "Standard Support"
+    ],
+    "color_hex": "#C0C0C0"
+  },
+  {
+    "id": "44b26c2f-a861-4db1-a6b4-ec96008cec2e",
+    "name": "Gold",
+    "min_points": 500,
+    "perks": [
+      "10% Discount on Skin Rituals",
+      "Priority Booking"
+    ],
+    "color_hex": "#FFD700"
+  },
+  {
+    "id": "75b5f59f-62ab-4aaa-ae10-692d01e30333",
+    "name": "Platinum",
+    "min_points": 2000,
+    "perks": [
+      "Free Hair Spa Monthly",
+      "Dedicated Stylist"
+    ],
+    "color_hex": "#E5E4E2"
+  }
+]

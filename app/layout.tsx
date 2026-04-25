@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Fraunces } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/layout/Navbar";
@@ -20,6 +20,21 @@ const fraunces = Fraunces({
 export const metadata: Metadata = {
   title: "Elegancia Unisex Salon & Makeover Studio | Slay Every Look",
   description: "Elegancia Unisex Salon & Makeover Studio. Where Elegance Meets Style. Unisex Salon | Hair • Beauty • Bridal. Located near More Super Market, Kesavanpady, Amballur, Ernakulam 682305.",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Elegancia",
+  },
+  formatDetection: {
+    telephone: false,
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#000000",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
 };
 
 export default function RootLayout({
