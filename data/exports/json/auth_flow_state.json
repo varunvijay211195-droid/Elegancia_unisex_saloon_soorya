@@ -1,0 +1,40 @@
+[
+  {
+    "id": "b49da8c0-439f-4677-803d-dd458f863c92",
+    "user_id": "9e146d70-233d-4594-ad0e-1bd3375614b8",
+    "auth_code": "7b7c0a15-78c1-4ed9-b7b7-a2d3ea52117f",
+    "code_challenge_method": "s256",
+    "code_challenge": "op7Ba37p-5gXEqRbdxI3FezPSEtEKt-9w0wkX0pBk40",
+    "provider_type": "email",
+    "provider_access_token": "",
+    "provider_refresh_token": "",
+    "created_at": "2026-03-11T13:33:28.289610+00:00",
+    "updated_at": "2026-03-11T13:33:50.042773+00:00",
+    "authentication_method": "email/signup",
+    "auth_code_issued_at": "2026-03-11T13:33:50.042699+00:00",
+    "invite_token": null,
+    "referrer": null,
+    "oauth_client_state_id": null,
+    "linking_target_id": null,
+    "email_optional": false
+  },
+  {
+    "id": "26948946-3fdc-4c63-a641-2257bd393a00",
+    "user_id": "8488e0ad-7a94-4ec5-ab83-e3b5da27c7e6",
+    "auth_code": "d46e903b-93ac-4e90-84f7-cdeca38fd276",
+    "code_challenge_method": "s256",
+    "code_challenge": "6Me7hKv39g1hBm6Bi1YY-KzfUsqEZpSpp4u1c--XhFA",
+    "provider_type": "email",
+    "provider_access_token": "",
+    "provider_refresh_token": "",
+    "created_at": "2026-03-11T13:47:20.762168+00:00",
+    "updated_at": "2026-03-11T13:47:20.762168+00:00",
+    "authentication_method": "email/signup",
+    "auth_code_issued_at": null,
+    "invite_token": null,
+    "referrer": null,
+    "oauth_client_state_id": null,
+    "linking_target_id": null,
+    "email_optional": false
+  }
+]

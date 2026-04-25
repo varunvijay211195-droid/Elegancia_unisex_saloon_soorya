@@ -1,0 +1,12 @@
+[
+  {
+    "id": "fec9d9f0-dc63-4a4d-83a8-f50d69effa32",
+    "sender_id": "a5e57ff7-7855-4f72-8d76-5311d3ee7a2a",
+    "recipient_id": "c6aecbd8-7ed9-43b2-91d7-19b72377432f",
+    "booking_id": "e582bef5-5cd2-4645-85a4-dc713ae2d982",
+    "message": "sd",
+    "note_type": "thank_you",
+    "is_read": false,
+    "created_at": "2026-03-11T22:53:18.546809+00:00"
+  }
+]

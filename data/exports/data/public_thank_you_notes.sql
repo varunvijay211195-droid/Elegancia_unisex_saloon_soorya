@@ -1,0 +1,2 @@
+-- Data for public.thank_you_notes
+INSERT INTO "public"."thank_you_notes" ("id", "sender_id", "recipient_id", "booking_id", "message", "note_type", "is_read", "created_at") VALUES ('fec9d9f0-dc63-4a4d-83a8-f50d69effa32', 'a5e57ff7-7855-4f72-8d76-5311d3ee7a2a', 'c6aecbd8-7ed9-43b2-91d7-19b72377432f', 'e582bef5-5cd2-4645-85a4-dc713ae2d982', 'sd', 'thank_you', FALSE, '2026-03-11 22:53:18.546809+00:00');

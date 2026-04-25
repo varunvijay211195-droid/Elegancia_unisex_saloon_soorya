@@ -1,0 +1,3 @@
+-- Data for public.profiles
+INSERT INTO "public"."profiles" ("id", "email", "full_name", "avatar_url", "role", "created_at", "loyalty_points", "total_spent", "phone_number", "date_of_birth") VALUES ('a5e57ff7-7855-4f72-8d76-5311d3ee7a2a', 'admin@eleganciasalon.com', 'System Administrator', NULL, 'admin', '2026-03-11 14:37:25.449488+00:00', 0, '0', NULL, NULL);
+INSERT INTO "public"."profiles" ("id", "email", "full_name", "avatar_url", "role", "created_at", "loyalty_points", "total_spent", "phone_number", "date_of_birth") VALUES ('c6aecbd8-7ed9-43b2-91d7-19b72377432f', 'ryantremblay92@gmail.com', 'testclient', NULL, 'user', '2026-03-11 16:34:52.928715+00:00', 150, '0', NULL, NULL);

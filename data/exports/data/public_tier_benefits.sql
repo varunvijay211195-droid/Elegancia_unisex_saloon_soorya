@@ -1,0 +1,5 @@
+-- Data for public.tier_benefits
+INSERT INTO "public"."tier_benefits" ("id", "tier_name", "min_points", "max_points", "bonus_percentage", "description", "created_at") VALUES ('06dce703-8cf2-4f48-90cc-3e94e16dfd5d', 'Bronze', 0, 499, 0, 'Welcome tier - 1 point per ₹1 spent', '2026-03-11 16:15:11.214371+00:00');
+INSERT INTO "public"."tier_benefits" ("id", "tier_name", "min_points", "max_points", "bonus_percentage", "description", "created_at") VALUES ('2384da78-3d59-4185-b0a7-6cb5773eaf57', 'Silver', 500, 999, 5, '5% bonus points on all services', '2026-03-11 16:15:11.214371+00:00');
+INSERT INTO "public"."tier_benefits" ("id", "tier_name", "min_points", "max_points", "bonus_percentage", "description", "created_at") VALUES ('689d9968-9f81-44bf-9ccc-42c95a58c065', 'Gold', 1000, 2499, 10, '10% bonus points on all services', '2026-03-11 16:15:11.214371+00:00');
+INSERT INTO "public"."tier_benefits" ("id", "tier_name", "min_points", "max_points", "bonus_percentage", "description", "created_at") VALUES ('614b88e3-d01f-41fd-9bf0-849033167955', 'Platinum', 2500, NULL, 15, '15% bonus points + priority booking', '2026-03-11 16:15:11.214371+00:00');
